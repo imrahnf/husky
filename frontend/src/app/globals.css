@@ -303,6 +303,12 @@ body {
   background: rgba(248,113,113,0.12) !important;
 }
 
+.admin-btn-active-preview {
+  background: rgba(250,200,50,0.18) !important;
+  border-color: rgba(250,200,50,0.5) !important;
+  color: #fde68a !important;
+}
+
 .admin-response {
   background: rgba(0,0,0,0.4);
   border: 1px solid rgba(255,255,255,0.08);
@@ -321,3 +327,65 @@ body {
   max-width: 240px;
 }
 
+/* ── Task 1 — Rock Pile ── */
+.task1-container {
+  position: relative;
+  width: 100%;
+  flex: 1;
+  min-height: 340px;
+  overflow: hidden;
+  border-radius: 16px;
+}
+
+.task1-rock {
+  position: absolute;
+  cursor: grab;
+  user-select: none;
+  touch-action: none;
+  will-change: transform;
+  transition: filter 0.15s;
+}
+
+.task1-rock:hover {
+  filter: brightness(1.15);
+}
+
+.task1-rock:active {
+  cursor: grabbing;
+}
+
+@keyframes task1-shake {
+  0%   { transform: rotate(var(--rot, 0deg)) translateX(0); }
+  20%  { transform: rotate(var(--rot, 0deg)) translateX(-7px); }
+  40%  { transform: rotate(var(--rot, 0deg)) translateX(7px); }
+  60%  { transform: rotate(var(--rot, 0deg)) translateX(-5px); }
+  80%  { transform: rotate(var(--rot, 0deg)) translateX(5px); }
+  100% { transform: rotate(var(--rot, 0deg)) translateX(0); }
+}
+
+.task1-shake {
+  animation: task1-shake 0.5s ease-in-out;
+}
+
+.task1-hint {
+  font-size: 0.85rem;
+  color: rgba(255,255,220,0.7);
+  font-style: italic;
+  letter-spacing: 0.03em;
+}
+
+.task1-found {
+  font-size: 1.4rem;
+  color: #86efac;
+  font-weight: 500;
+  letter-spacing: 0.05em;
+}
+
+.task1-loading {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: rgba(255,255,255,0.35);
+}

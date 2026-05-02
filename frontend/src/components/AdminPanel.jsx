@@ -18,7 +18,7 @@ function StateTag({ state }) {
   );
 }
 
-export default function AdminPanel({ flow, onAction }) {
+export default function AdminPanel({ flow, onAction, forceTask, setForceTask }) {
   const [responses, setResponses] = useState({});
   const [errors, setErrors] = useState({});
   const [loading, setLoading] = useState({});
@@ -92,6 +92,27 @@ export default function AdminPanel({ flow, onAction }) {
             onClick={() => run("t3", completeTask3)}
           />
         </div>
+      </div>
+
+      {/* Force Preview */}
+      <div className="admin-section">
+        <div className="admin-section-label">Force Preview (dev only)</div>
+        <div className="admin-actions-row">
+          {["task-1", "task-2", "task-3"].map(id => (
+            <button
+              key={id}
+              className={`admin-btn ${forceTask === id ? "admin-btn-active-preview" : ""}`}
+              onClick={() => setForceTask(forceTask === id ? null : id)}
+            >
+              {forceTask === id ? `✕ Exit ${id}` : `Preview ${id}`}
+            </button>
+          ))}
+        </div>
+        {forceTask && (
+          <div style={{ fontSize: "0.72rem", color: "rgba(255,220,100,0.7)", marginTop: 4 }}>
+            ⚠ Previewing {forceTask} — backend state not affected
+          </div>
+        )}
       </div>
     </div>
   );

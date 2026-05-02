@@ -43,10 +43,13 @@ function StatusBanner({ flow, activeTask, loading, error }) {
 
 export default function Home() {
   const [polling, setPolling] = useState(false);
+  const [forceTask, setForceTask] = useState(null);
   const { flow, activeTask, error, loading, refresh } = useFlowPoller({ polling });
 
+  // forceTask lets admin preview a task UI regardless of backend state
+  const displayTask = forceTask ?? activeTask;
   const allCompleted =
-    flow && TASK_IDS.every((id) => flow[id]?.state === "completed");
+    !forceTask && flow && TASK_IDS.every((id) => flow[id]?.state === "completed");
 
   return (
     <div
@@ -63,33 +66,24 @@ export default function Home() {
 
       {/* Main Glass Panel */}
       <div className="glass-panel">
-        {/* No active task */}
-        {!activeTask && !allCompleted && (
+        {!displayTask && !allCompleted && (
           <div className="idle-state">
             <p>Waiting for Roblox to trigger a task…</p>
           </div>
         )}
-
-        {/* All done */}
         {allCompleted && (
           <div className="idle-state">
             <p>🎉 All tasks completed. The ritual is complete.</p>
           </div>
         )}
-
-        {/* Task 1 */}
-        {activeTask === "task-1" && (
-          <Task1 onComplete={refresh} />
+        {displayTask === "task-1" && (
+          <Task1 onComplete={() => { setForceTask(null); refresh(); }} />
         )}
-
-        {/* Task 2 */}
-        {activeTask === "task-2" && (
-          <Task2 onComplete={refresh} />
+        {displayTask === "task-2" && (
+          <Task2 onComplete={() => { setForceTask(null); refresh(); }} />
         )}
-
-        {/* Task 3 */}
-        {activeTask === "task-3" && (
-          <Task3 onComplete={refresh} />
+        {displayTask === "task-3" && (
+          <Task3 onComplete={() => { setForceTask(null); refresh(); }} />
         )}
       </div>
 
@@ -117,7 +111,7 @@ export default function Home() {
       </div>
 
       {/* Admin Panel */}
-      <AdminPanel flow={flow} onAction={refresh} />
+      <AdminPanel flow={flow} onAction={refresh} forceTask={forceTask} setForceTask={setForceTask} />
     </div>
   );
 }
