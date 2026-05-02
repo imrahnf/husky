@@ -1,26 +1,323 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
-
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
-}
+/* ── Reset ── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
+  background: #0a0a0a;
+  color: #ededed;
 }
+
+/* ── Page root ── */
+.page-root {
+  position: relative;
+  min-height: 100vh;
+  width: 100%;
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 20px;
+  padding: 80px 16px 180px;
+}
+
+/* ── Status Banner ── */
+.status-banner {
+  position: absolute;
+  top: 28px;
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 14px 36px;
+  backdrop-filter: blur(12px);
+  border-radius: 999px;
+  border: 1px solid rgba(255,255,255,0.2);
+  color: #fff;
+  font-size: 1.15rem;
+  font-weight: 400;
+  letter-spacing: 0.03em;
+  white-space: nowrap;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  box-shadow: 0 4px 24px rgba(0,0,0,0.3);
+}
+
+.status-dot {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: currentColor;
+  opacity: 0.7;
+}
+
+/* ── Main glass panel ── */
+.glass-panel {
+  width: 100%;
+  max-width: 860px;
+  min-height: 520px;
+  background: rgba(255,255,255,0.05);
+  backdrop-filter: blur(10px);
+  border-radius: 24px;
+  border: 1px solid rgba(255,255,255,0.1);
+  box-shadow: 0 8px 40px rgba(0,0,0,0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 40px;
+}
+
+/* ── Idle / all-done states ── */
+.idle-state {
+  text-align: center;
+  color: rgba(255,255,255,0.5);
+  font-size: 1.1rem;
+}
+
+/* ── Console image ── */
+.console-img {
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 256px;
+  object-fit: contain;
+  pointer-events: none;
+}
+
+/* ── Task panels ── */
+.task-panel {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
+  text-align: center;
+  width: 100%;
+}
+
+.task-panel h2 {
+  font-size: 1.6rem;
+  font-weight: 600;
+  color: #fff;
+}
+
+.task-desc {
+  color: rgba(255,255,255,0.65);
+  font-size: 1rem;
+  max-width: 440px;
+}
+
+.error-msg {
+  color: #f87171;
+  font-size: 0.9rem;
+}
+
+/* ── Task 2 choices ── */
+.choices-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  justify-content: center;
+}
+
+.choice-btn {
+  padding: 12px 28px;
+  background: rgba(255,255,255,0.08);
+  border: 1px solid rgba(255,255,255,0.2);
+  border-radius: 12px;
+  color: #fff;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s;
+}
+
+.choice-btn:hover {
+  background: rgba(255,255,255,0.15);
+}
+
+.choice-selected {
+  background: rgba(139,117,163,0.55) !important;
+  border-color: rgba(200,170,220,0.6) !important;
+  font-weight: 600;
+}
+
+/* ── Action button ── */
+.action-btn {
+  padding: 12px 36px;
+  background: rgba(139,117,163,0.45);
+  border: 1px solid rgba(255,255,255,0.25);
+  border-radius: 12px;
+  color: #fff;
+  font-size: 1rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.action-btn:hover:not(:disabled) {
+  background: rgba(139,117,163,0.65);
+}
+
+.action-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* ── Poll controls ── */
+.poll-controls {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+.ctrl-btn {
+  padding: 8px 18px;
+  background: rgba(255,255,255,0.1);
+  border: 1px solid rgba(255,255,255,0.2);
+  border-radius: 8px;
+  color: #fff;
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.ctrl-btn:hover:not(:disabled) {
+  background: rgba(255,255,255,0.18);
+}
+
+.ctrl-btn-active {
+  background: rgba(139,117,163,0.45) !important;
+  border-color: rgba(200,170,220,0.5) !important;
+}
+
+.ctrl-btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.mode-pill {
+  font-size: 0.78rem;
+  color: rgba(255,255,255,0.5);
+  padding: 4px 10px;
+  border: 1px solid rgba(255,255,255,0.15);
+  border-radius: 999px;
+}
+
+/* ── Admin Panel ── */
+.admin-panel {
+  width: 100%;
+  max-width: 860px;
+  background: rgba(0,0,0,0.45);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 16px;
+  padding: 20px 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.admin-title {
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: rgba(255,255,255,0.4);
+}
+
+.admin-section {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.admin-section-label {
+  font-size: 0.72rem;
+  color: rgba(255,255,255,0.35);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.admin-tasks-row {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.admin-task-card {
+  background: rgba(255,255,255,0.05);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 10px;
+  padding: 10px 16px;
+  font-size: 0.85rem;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 140px;
+}
+
+.admin-actions-row {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  align-items: flex-start;
+}
+
+.admin-btn-group {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.admin-btn {
+  padding: 7px 14px;
+  background: rgba(255,255,255,0.07);
+  border: 1px solid rgba(255,255,255,0.15);
+  border-radius: 8px;
+  color: #fff;
+  font-size: 0.82rem;
+  cursor: pointer;
+  transition: background 0.15s;
+  white-space: nowrap;
+}
+
+.admin-btn:hover:not(:disabled) {
+  background: rgba(255,255,255,0.13);
+}
+
+.admin-btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.admin-btn-danger {
+  border-color: rgba(248,113,113,0.4);
+  color: #fca5a5;
+}
+
+.admin-btn-danger:hover:not(:disabled) {
+  background: rgba(248,113,113,0.12) !important;
+}
+
+.admin-response {
+  background: rgba(0,0,0,0.4);
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 6px;
+  padding: 6px 10px;
+  font-size: 0.72rem;
+  color: #86efac;
+  max-width: 240px;
+  overflow-x: auto;
+  white-space: pre-wrap;
+}
+
+.admin-error {
+  font-size: 0.76rem;
+  color: #f87171;
+  max-width: 240px;
+}
+
