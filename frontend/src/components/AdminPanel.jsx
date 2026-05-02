@@ -86,11 +86,11 @@ export default function AdminPanel({ flow, onAction, forceTask, setForceTask }) 
             onClick={() => run("t1", completeTask1)}
           />
           <AdminBtn
-            label='Complete Task 2 (choice: "doubt")'
+            label='Complete Task 2 (choice: "unspoken")'
             loading={loading["t2"]}
             response={responses["t2"]}
             error={errors["t2"]}
-            onClick={() => run("t2", () => completeTask2("doubt"))}
+            onClick={() => run("t2", () => completeTask2("unspoken"))}
           />
           <AdminBtn
             label="Complete Task 3"

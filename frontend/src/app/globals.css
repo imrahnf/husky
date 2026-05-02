@@ -13,16 +13,19 @@ body {
 .page-root {
   position: relative;
   min-height: 100vh;
+  min-height: 100dvh;
   width: 100%;
   background-size: contain;
   background-position: center;
   background-repeat: no-repeat;
+  background-attachment: fixed;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   gap: 20px;
-  padding: 80px 16px 180px;
+  padding: 80px 16px 120px;
+  overflow-x: hidden;
 }
 
 /* iPad Air 4 (820x1180) portrait + landscape */
@@ -198,7 +201,7 @@ body {
 .task2-sky {
   position: relative;
   width: 100%;
-  min-height: 250px;
+  min-height: 340px;
   border-radius: 18px;
   overflow: hidden;
   background: radial-gradient(circle at 50% 55%, rgba(84, 130, 204, 0.12), rgba(18, 21, 56, 0.04) 65%);
@@ -246,6 +249,18 @@ body {
   animation-name: task2FloatC;
 }
 
+.task2-float-d {
+  animation-name: task2FloatD;
+}
+
+.task2-float-e {
+  animation-name: task2FloatE;
+}
+
+.task2-float-f {
+  animation-name: task2FloatF;
+}
+
 @keyframes task2FloatA {
   0%, 100% { transform: translate(-50%, -50%) translate(0, 0) rotate(-1deg); }
   25% { transform: translate(-50%, -50%) translate(14px, -10px) rotate(1.4deg); }
@@ -265,6 +280,25 @@ body {
   25% { transform: translate(-50%, -50%) translate(12px, -16px) rotate(1.3deg); }
   50% { transform: translate(-50%, -50%) translate(-14px, -6px) rotate(-1deg); }
   75% { transform: translate(-50%, -50%) translate(-6px, 10px) rotate(1deg); }
+}
+
+@keyframes task2FloatD {
+  0%, 100% { transform: translate(-50%, -50%) translate(0, 0) rotate(0.5deg); }
+  33% { transform: translate(-50%, -50%) translate(-16px, 8px) rotate(-1.2deg); }
+  66% { transform: translate(-50%, -50%) translate(10px, -12px) rotate(0.9deg); }
+}
+
+@keyframes task2FloatE {
+  0%, 100% { transform: translate(-50%, -50%) translate(0, 0) rotate(-0.4deg); }
+  20% { transform: translate(-50%, -50%) translate(8px, 14px) rotate(1.1deg); }
+  60% { transform: translate(-50%, -50%) translate(-11px, -9px) rotate(-1deg); }
+}
+
+@keyframes task2FloatF {
+  0%, 100% { transform: translate(-50%, -50%) translate(0, 0) rotate(0.8deg); }
+  25% { transform: translate(-50%, -50%) translate(15px, 6px) rotate(-0.9deg); }
+  50% { transform: translate(-50%, -50%) translate(-9px, -14px) rotate(1.2deg); }
+  75% { transform: translate(-50%, -50%) translate(-12px, 11px) rotate(-0.6deg); }
 }
 
 .task2-story {
@@ -348,6 +382,132 @@ body {
   padding: 4px 10px;
   border: 1px solid rgba(255,255,255,0.15);
   border-radius: 999px;
+}
+
+/* ── Admin slide-out drawer (fixed — does not push layout or background) ── */
+/* Single compact control on the edge — full admin UI only appears in the drawer */
+.admin-drawer-trigger {
+  position: fixed;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 10002;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  border: 1px solid rgba(255, 255, 255, 0.28);
+  background: rgba(22, 18, 38, 0.88);
+  backdrop-filter: blur(8px);
+  color: #fff;
+  font-size: 1.25rem;
+  line-height: 1;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.35);
+  transition: background 0.15s ease, transform 0.15s ease;
+}
+
+.admin-drawer-trigger:hover {
+  background: rgba(45, 36, 72, 0.92);
+  transform: translateY(-50%) scale(1.05);
+}
+
+.admin-drawer-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 10000;
+  border: none;
+  padding: 0;
+  margin: 0;
+  background: rgba(0, 0, 0, 0.45);
+  cursor: pointer;
+}
+
+.admin-drawer {
+  position: fixed;
+  top: 0;
+  right: 0;
+  z-index: 10001;
+  height: 100vh;
+  height: 100dvh;
+  width: min(440px, 92vw);
+  max-width: 100%;
+  transform: translateX(100%);
+  transition: transform 0.28s ease;
+  pointer-events: none;
+  box-shadow: -8px 0 40px rgba(0, 0, 0, 0.45);
+}
+
+.admin-drawer--open {
+  transform: translateX(0);
+  pointer-events: auto;
+}
+
+.admin-drawer-inner {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  background: rgba(14, 12, 24, 0.96);
+  backdrop-filter: blur(14px);
+  border-left: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+.admin-drawer-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 16px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  flex-shrink: 0;
+}
+
+.admin-drawer-title {
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.55);
+}
+
+.admin-drawer-close {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  background: rgba(255, 255, 255, 0.06);
+  color: #fff;
+  font-size: 1.4rem;
+  line-height: 1;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+}
+
+.admin-drawer-close:hover {
+  background: rgba(255, 255, 255, 0.12);
+}
+
+.admin-drawer-scroll {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 16px;
+  -webkit-overflow-scrolling: touch;
+}
+
+.admin-drawer-poll {
+  flex-wrap: wrap;
+  margin-bottom: 16px;
+}
+
+.admin-drawer .admin-panel {
+  width: 100%;
+  max-width: none;
 }
 
 /* ── Admin Panel ── */

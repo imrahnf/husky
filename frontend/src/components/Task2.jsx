@@ -3,9 +3,20 @@ import { useEffect, useState } from "react";
 import { completeTask2 } from "@/lib/api";
 
 const CHOICES = [
-  { id: "guarded", x: 16, y: 30, drift: "a", delay: "0s" },
-  { id: "uneasy", x: 47, y: 56, drift: "b", delay: "0.6s" },
-  { id: "unspoken", x: 76, y: 34, drift: "c", delay: "1.1s" },
+  { id: "guarded", x: 14, y: 22, drift: "a", delay: "0s" },
+  { id: "uneasy", x: 78, y: 20, drift: "b", delay: "0.2s" },
+  { id: "unspoken", x: 48, y: 36, drift: "c", delay: "0.4s" },
+  { id: "anxious", x: 24, y: 52, drift: "d", delay: "0.1s" },
+  { id: "ashamed", x: 84, y: 46, drift: "e", delay: "0.35s" },
+  { id: "numb", x: 12, y: 70, drift: "f", delay: "0.5s" },
+  { id: "restless", x: 58, y: 66, drift: "a", delay: "0.65s" },
+  { id: "hopeful", x: 90, y: 68, drift: "b", delay: "0.25s" },
+  { id: "tired", x: 40, y: 80, drift: "c", delay: "0.55s" },
+  { id: "afraid", x: 66, y: 28, drift: "d", delay: "0.15s" },
+  { id: "hidden", x: 34, y: 16, drift: "e", delay: "0.45s" },
+  { id: "raw", x: 72, y: 56, drift: "f", delay: "0.3s" },
+  { id: "lonely", x: 52, y: 12, drift: "a", delay: "0.7s" },
+  { id: "brave", x: 18, y: 40, drift: "b", delay: "0.05s" },
 ];
 const STORY_TITLE = "Vulnerability";
 const STORY_TEXT =
