@@ -1,71 +1,123 @@
-import uuid
-from collections import deque
-from typing import Any
+from typing import Any, Literal
 
 import uvicorn
-from fastapi import FastAPI
-from pydantic import BaseModel, Field
+from fastapi import FastAPI, HTTPException
+from pydantic import BaseModel
 
 app = FastAPI()
 
+class CompleteBody(BaseModel):
+    choice: str | None = None
 
-class Task(BaseModel):
-    id: str
-    handler: str
-    args: dict[str, Any] = Field(default_factory=dict)
+TaskState = Literal["waiting", "triggered", "completed"]
 
-class TaskCreate(BaseModel):
-    handler: str
-    args: dict[str, Any] = Field(default_factory=dict)
+class FlowTask(BaseModel):
+    state: TaskState = "waiting"
+    choice: str | None = None
 
-class GetTaskResponse(BaseModel):
-    task: Task | None
+# Fixed-state flow for hackathon story tasks.
+_flow: dict[str, FlowTask] = {
+    "task-1": FlowTask(),
+    "task-2": FlowTask(),
+    "task-3": FlowTask(),
+}
 
-_queue: deque[Task] = deque()
+def _reset_flow() -> None:
+    for key in _flow:
+        _flow[key] = FlowTask(state="waiting", choice=None)
 
-def _seed_demo_queue() -> None:
-    _queue.clear()
-    for item in ("sword", "rocket", "orb", "sword", "rocket", "orb"):
-        _queue.append(
-            Task(
-                id=str(uuid.uuid4()),
-                handler="spawn",
-                args={"item": item},
-            )
-        )
-_seed_demo_queue()
+def _get_flow_task(task_id: str) -> FlowTask:
+    task = _flow.get(task_id)
+    if task is None:
+        raise HTTPException(status_code=404, detail=f"unknown task id: {task_id}")
+    return task
 
-@app.get("/test")
-def test_endpoint():
-    return "test endpoint works!"
+def _trigger(task_id: str) -> dict[str, Any]:
+    task = _get_flow_task(task_id)
+    if task.state == "waiting":
+        task.state = "triggered"
+        return {"ok": True, "changed": True, "task_id": task_id, "task": task.model_dump()}
+    return {
+        "ok": True,
+        "changed": False,
+        "task_id": task_id,
+        "task": task.model_dump(),
+        "reason": "already_triggered_or_completed",
+    }
 
-@app.get("/get-task", response_model=GetTaskResponse)
-def get_task():
-    if not _queue:
-        return GetTaskResponse(task=None)
-    return GetTaskResponse(task=_queue.popleft())
+def _complete(task_id: str, choice: str | None = None) -> dict[str, Any]:
+    task = _get_flow_task(task_id)
+    if task.state != "triggered":
+        return {
+            "ok": False,
+            "changed": False,
+            "task_id": task_id,
+            "task": task.model_dump(),
+            "error": "task_not_triggered",
+        }
+    task.state = "completed"
+    if choice is not None:
+        task.choice = choice
+    return {"ok": True, "changed": True, "task_id": task_id, "task": task.model_dump()}
 
+_reset_flow()
 
-@app.get("/peek-task", response_model=GetTaskResponse)
-def peek_task():
-    """Next task without removing it (safe for UI polling)."""
-    if not _queue:
-        return GetTaskResponse(task=None)
-    return GetTaskResponse(task=_queue[0])
+@app.get("/health")
+def health():
+    return {"ok": True, "service": "husky-backend"}
 
-@app.post("/tasks")
-def enqueue_tasks(tasks: list[TaskCreate]):
-    ids: list[str] = []
-    for t in tasks:
-        task = Task(id=str(uuid.uuid4()), handler=t.handler, args=t.args)
-        _queue.append(task)
-        ids.append(task.id)
-    return {"ok": True, "ids": ids}
+@app.post("/flow/reset")
+def flow_reset():
+    _reset_flow()
+    return {"ok": True, "message": "flow reset", "flow": {k: v.model_dump() for k, v in _flow.items()}}
 
-@app.post("/tasks/reset-demo")
-def reset_demo_queue():
-    _seed_demo_queue()
-    return {"ok": True, "queued": len(_queue)}
+@app.get("/flow")
+def flow_state():
+    return {"ok": True, "flow": {k: v.model_dump() for k, v in _flow.items()}}
+
+@app.get("/task-1")
+def task_1_status():
+    return {"ok": True, "task_id": "task-1", "task": _get_flow_task("task-1").model_dump()}
+
+@app.post("/task-1/trigger")
+def task_1_trigger():
+    return _trigger("task-1")
+
+@app.post("/task-1/complete")
+def task_1_complete():
+    return _complete("task-1")
+
+@app.get("/task-2")
+def task_2_status():
+    task = _get_flow_task("task-2")
+    return {"ok": True, "task_id": "task-2", "task": task.model_dump(), "choice": task.choice}
+
+@app.post("/task-2/trigger")
+def task_2_trigger():
+    return _trigger("task-2")
+
+@app.post("/task-2/complete")
+def task_2_complete(body: CompleteBody):
+    return _complete("task-2", choice=body.choice)
+
+@app.get("/task-2/choice")
+def task_2_choice():
+    task = _get_flow_task("task-2")
+    if task.state != "completed":
+        return {"ok": False, "choice": None, "reason": "task_not_completed"}
+    return {"ok": True, "choice": task.choice}
+
+@app.get("/task-3")
+def task_3_status():
+    return {"ok": True, "task_id": "task-3", "task": _get_flow_task("task-3").model_dump()}
+
+@app.post("/task-3/trigger")
+def task_3_trigger():
+    return _trigger("task-3")
+
+@app.post("/task-3/complete")
+def task_3_complete():
+    return _complete("task-3")
 
 @app.get("/")
 def root():

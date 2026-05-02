@@ -1,0 +1,158 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Husky Task Panel</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 24px; max-width: 760px; }
+    .row { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; margin-bottom: 12px; }
+    button { padding: 8px 12px; cursor: pointer; }
+    input { padding: 8px; min-width: 320px; }
+    .card { border: 1px solid #ddd; border-radius: 8px; padding: 12px; margin: 10px 0; }
+    .waiting { color: #666; }
+    .triggered { color: #9a6700; font-weight: bold; }
+    .completed { color: #1a7f37; }
+    #status { margin: 10px 0; font-weight: bold; }
+    #error { color: #b42318; min-height: 20px; }
+    .pill { border-radius: 999px; border: 1px solid #ccc; padding: 2px 8px; font-size: 12px; }
+  </style>
+</head>
+<body>
+  <h2>Husky End-to-End Verifier</h2>
+
+  <div class="row">
+    <label for="baseUrl">API Base URL:</label>
+    <input id="baseUrl" value="https://husky.omrahnfaqiri.com" />
+  </div>
+
+  <div class="row">
+    <button id="refreshBtn">Refresh Once</button>
+    <button id="togglePollBtn">Start Polling</button>
+    <span id="mode" class="pill">Mode: Manual</span>
+  </div>
+
+  <div id="status">Main status: unknown</div>
+  <div id="error"></div>
+  <div id="tasks"></div>
+
+  <script>
+    const taskIds = ["task-1", "task-2", "task-3"];
+    const refreshBtn = document.getElementById("refreshBtn");
+    const togglePollBtn = document.getElementById("togglePollBtn");
+    const modeEl = document.getElementById("mode");
+    const statusEl = document.getElementById("status");
+    const errorEl = document.getElementById("error");
+    const tasksEl = document.getElementById("tasks");
+    const baseUrlInput = document.getElementById("baseUrl");
+
+    let pollTimer = null;
+    const pollMs = 2000;
+
+    function baseUrl() {
+      return baseUrlInput.value.trim().replace(/\/+$/, "");
+    }
+
+    function setError(msg = "") {
+      errorEl.textContent = msg;
+    }
+
+    async function fetchFlow() {
+      const res = await fetch(`${baseUrl()}/flow`);
+      if (!res.ok) throw new Error(`GET /flow failed (${res.status})`);
+      return res.json();
+    }
+
+    async function completeTask(taskId) {
+      const opts = { method: "POST", headers: { "Content-Type": "application/json" } };
+      if (taskId === "task-2") {
+        opts.body = JSON.stringify({ choice: "doubt" });
+      }
+      const res = await fetch(`${baseUrl()}/${taskId}/complete`, opts);
+      if (!res.ok) throw new Error(`POST /${taskId}/complete failed (${res.status})`);
+      return res.json();
+    }
+
+    function render(flow) {
+      const tasks = flow?.flow || {};
+      const triggered = taskIds.find((id) => tasks[id]?.state === "triggered");
+      const allWaiting = taskIds.every((id) => tasks[id]?.state === "waiting");
+      statusEl.textContent = allWaiting
+        ? "Main status: waiting"
+        : triggered
+          ? `Main status: ${triggered} triggered`
+          : "Main status: active";
+
+      tasksEl.innerHTML = "";
+      taskIds.forEach((taskId) => {
+        const task = tasks[taskId] || { state: "unknown", choice: null };
+        const state = task.state || "unknown";
+        const card = document.createElement("div");
+        card.className = "card";
+
+        const title = document.createElement("div");
+        title.innerHTML = `<strong>${taskId}</strong> <span class="${state}">${state}</span>`;
+        card.appendChild(title);
+
+        if (task.choice) {
+          const choice = document.createElement("div");
+          choice.textContent = `choice: ${task.choice}`;
+          card.appendChild(choice);
+        }
+
+        if (state === "triggered") {
+          const btn = document.createElement("button");
+          btn.textContent = `Complete ${taskId}`;
+          btn.onclick = async () => {
+            setError("");
+            btn.disabled = true;
+            try {
+              await completeTask(taskId);
+              await refresh();
+            } catch (e) {
+              setError(e.message || String(e));
+            } finally {
+              btn.disabled = false;
+            }
+          };
+          card.appendChild(btn);
+        }
+
+        tasksEl.appendChild(card);
+      });
+    }
+
+    async function refresh() {
+      setError("");
+      try {
+        const flow = await fetchFlow();
+        render(flow);
+      } catch (e) {
+        setError(e.message || String(e));
+      }
+    }
+
+    function setPolling(on) {
+      if (on) {
+        pollTimer = setInterval(refresh, pollMs);
+        togglePollBtn.textContent = "Stop Polling";
+        modeEl.textContent = "Mode: Polling";
+      } else {
+        clearInterval(pollTimer);
+        pollTimer = null;
+        togglePollBtn.textContent = "Start Polling";
+        modeEl.textContent = "Mode: Manual";
+      }
+    }
+
+    refreshBtn.onclick = refresh;
+    togglePollBtn.onclick = () => {
+      setPolling(!pollTimer);
+      if (pollTimer) refresh();
+    };
+
+    // Manual-first startup
+    refresh();
+  </script>
+</body>
+</html>
