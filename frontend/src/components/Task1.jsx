@@ -92,16 +92,75 @@ function genPositions(w, h) {
   }));
 }
 
+const STORY_TITLE = "Self-Acceptance";
+const STORY_BODY =
+  "The stone you chose was not ruined—it was honest. For a long time, fitting in felt like the only way to matter. But worth is not a costume you borrow. Self-acceptance is realizing you don't have to be \"normal\" to be valuable; it is choosing to stand beside yourself, cracks and all, and still call that enough.";
+const TITLE_CHAR_MS = 42;
+const TITLE_BODY_GAP_MS = 320;
+const BODY_CHAR_MS = 24;
+const AFTER_TYPING_PAUSE_MS = 2000;
+
 export default function Task1({ onComplete }) {
   const containerRef = useRef(null);
   const [rocks, setRocks] = useState(null);
   const [maxZ, setMaxZ] = useState(ROCK_COUNT + 1);
-  const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
-  const [done, setDone] = useState(false);
+  /** playing → submitting (API) → story (typewriter) */
+  const [phase, setPhase] = useState("playing");
+  const [typedTitle, setTypedTitle] = useState("");
+  const [typedBody, setTypedBody] = useState("");
+  const [storyTypingDone, setStoryTypingDone] = useState(false);
   const [hint, setHint] = useState(false);
   const [imperfectIdx] = useState(() => Math.floor(Math.random() * ROCK_COUNT));
   const dragRef = useRef(null);
+  const onCompleteRef = useRef(onComplete);
+
+  useEffect(() => {
+    onCompleteRef.current = onComplete;
+  }, [onComplete]);
+
+  useEffect(() => {
+    if (phase !== "story") return;
+
+    const timeouts = [];
+    let cancelled = false;
+
+    const wait = (ms) =>
+      new Promise((resolve) => {
+        const id = window.setTimeout(resolve, ms);
+        timeouts.push(id);
+      });
+
+    const run = async () => {
+      for (let i = 1; i <= STORY_TITLE.length; i++) {
+        if (cancelled) return;
+        await wait(TITLE_CHAR_MS);
+        setTypedTitle(STORY_TITLE.slice(0, i));
+      }
+      await wait(TITLE_BODY_GAP_MS);
+      for (let i = 1; i <= STORY_BODY.length; i++) {
+        if (cancelled) return;
+        await wait(BODY_CHAR_MS);
+        setTypedBody(STORY_BODY.slice(0, i));
+      }
+      if (!cancelled) setStoryTypingDone(true);
+    };
+
+    run();
+
+    return () => {
+      cancelled = true;
+      timeouts.forEach((id) => window.clearTimeout(id));
+    };
+  }, [phase]);
+
+  useEffect(() => {
+    if (!storyTypingDone) return;
+    const id = window.setTimeout(() => {
+      onCompleteRef.current?.();
+    }, AFTER_TYPING_PAUSE_MS);
+    return () => window.clearTimeout(id);
+  }, [storyTypingDone]);
 
   useEffect(() => {
     if (!containerRef.current) return;
@@ -125,7 +184,6 @@ export default function Task1({ onComplete }) {
         offsetY: e.clientY - rock.y,
         moved: false,
         imperfectIdx,
-        onComplete,
       };
       return prev.map(r => r.id === rockId ? { ...r, z: nz } : r);
     });
@@ -149,16 +207,17 @@ export default function Task1({ onComplete }) {
       if (!d || d.moved) return;
       // clicked
       if (d.rockId === d.imperfectIdx) {
-        setLoading(true);
-        setDone(true);
+        setPhase("submitting");
+        setError(null);
         try {
           await completeTask1();
-          d.onComplete?.();
+          setTypedTitle("");
+          setTypedBody("");
+          setStoryTypingDone(false);
+          setPhase("story");
         } catch (err) {
           setError(err.message || String(err));
-          setDone(false);
-        } finally {
-          setLoading(false);
+          setPhase("playing");
         }
       } else {
         setHint(true);
@@ -171,18 +230,15 @@ export default function Task1({ onComplete }) {
     window.addEventListener("pointerup", onUp);
   };
 
-  if (done && !error) {
-    return (
-      <div className="task-panel">
-        <div className="task1-found">✓ Imperfection recognized.</div>
-      </div>
-    );
-  }
-
   return (
-    <div className="task-panel" style={{ width: "100%", height: "100%" }}>
+    <div
+      className={`task-panel task1-wrap${phase !== "playing" ? " task1-wrap--blocked" : ""}`}
+      style={{ width: "100%", height: "100%" }}
+    >
       <h2>Task 1 — Recognize Imperfection</h2>
-      <p className="task-desc">Dig through the pile. Find the stone that doesn't belong.</p>
+      <p className="task-desc">
+        Dig through the pile. Find the stone that {"doesn't"} belong.
+      </p>
       {hint && <p className="task1-hint">Look closer… one is different.</p>}
       {error && <p className="error-msg">{error}</p>}
       <div className="task1-container" ref={containerRef}>
@@ -203,6 +259,33 @@ export default function Task1({ onComplete }) {
           </div>
         ))}
       </div>
+
+      {phase === "submitting" && (
+        <div className="task1-story-overlay" aria-live="polite">
+          <div className="task1-story-typing task1-story-typing--compact">
+            <p className="task1-story-submit-msg">Hold on…</p>
+          </div>
+        </div>
+      )}
+
+      {phase === "story" && (
+        <div className="task1-story-overlay" aria-live="polite">
+          <div className="task1-story-typing">
+            <h3 className="task1-story-title">
+              {typedTitle}
+              {!storyTypingDone && typedTitle.length < STORY_TITLE.length && (
+                <span className="task1-story-cursor" aria-hidden="true" />
+              )}
+            </h3>
+            <p className="task1-story-line">
+              {typedBody}
+              {storyTypingDone ? null : typedTitle.length === STORY_TITLE.length ? (
+                <span className="task1-story-cursor" aria-hidden="true" />
+              ) : null}
+            </p>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

@@ -19,6 +19,24 @@ export async function completeTask1() {
   return res.json();
 }
 
+export async function triggerTask1() {
+  const res = await fetch(`${BASE_URL}/task-1/trigger`, { method: "POST" });
+  if (!res.ok) throw new Error(`POST /task-1/trigger failed (${res.status})`);
+  return res.json();
+}
+
+export async function triggerTask2() {
+  const res = await fetch(`${BASE_URL}/task-2/trigger`, { method: "POST" });
+  if (!res.ok) throw new Error(`POST /task-2/trigger failed (${res.status})`);
+  return res.json();
+}
+
+export async function triggerTask3() {
+  const res = await fetch(`${BASE_URL}/task-3/trigger`, { method: "POST" });
+  if (!res.ok) throw new Error(`POST /task-3/trigger failed (${res.status})`);
+  return res.json();
+}
+
 export async function completeTask2(choice) {
   const res = await fetch(`${BASE_URL}/task-2/complete`, {
     method: "POST",

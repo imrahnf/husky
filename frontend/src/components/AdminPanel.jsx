@@ -1,6 +1,14 @@
 "use client";
 import { useState } from "react";
-import { resetFlow, completeTask1, completeTask2, completeTask3 } from "@/lib/api";
+import {
+  resetFlow,
+  completeTask1,
+  completeTask2,
+  completeTask3,
+  triggerTask1,
+  triggerTask2,
+  triggerTask3,
+} from "@/lib/api";
 
 const TASK_IDS = ["task-1", "task-2", "task-3"];
 
@@ -113,6 +121,38 @@ export default function AdminPanel({ flow, onAction, forceTask, setForceTask }) 
             ⚠ Previewing {forceTask} — backend state not affected
           </div>
         )}
+      </div>
+
+      {/* Debug: trigger tasks (same as Roblox → husky.omrahnfaqiri.com/.../trigger) */}
+      <div className="admin-section">
+        <div className="admin-section-label">Debug — trigger tasks (no Roblox)</div>
+        <p className="admin-debug-hint">
+          Calls POST <code>/api/task-N/trigger</code> (proxied to{" "}
+          <code>husky.omrahnfaqiri.com</code>). Refreshes flow after each call.
+        </p>
+        <div className="admin-actions-row">
+          <AdminBtn
+            label="Trigger task 1"
+            loading={loading["trig1"]}
+            response={responses["trig1"]}
+            error={errors["trig1"]}
+            onClick={() => run("trig1", triggerTask1)}
+          />
+          <AdminBtn
+            label="Trigger task 2"
+            loading={loading["trig2"]}
+            response={responses["trig2"]}
+            error={errors["trig2"]}
+            onClick={() => run("trig2", triggerTask2)}
+          />
+          <AdminBtn
+            label="Trigger task 3"
+            loading={loading["trig3"]}
+            response={responses["trig3"]}
+            error={errors["trig3"]}
+            onClick={() => run("trig3", triggerTask3)}
+          />
+        </div>
       </div>
     </div>
   );
