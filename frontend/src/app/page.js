@@ -6,41 +6,6 @@ import Task2 from "@/components/Task2";
 import Task3 from "@/components/Task3";
 import AdminPanel from "@/components/AdminPanel";
 
-const TASK_IDS = ["task-1", "task-2", "task-3"];
-
-function StatusBanner({ flow, activeTask, loading, error }) {
-  const allCompleted =
-    flow && TASK_IDS.every((id) => flow[id]?.state === "completed");
-  const allWaiting =
-    flow && TASK_IDS.every((id) => flow[id]?.state === "waiting");
-
-  let label = "Fetching state...";
-  if (error) label = `Error: ${error}`;
-  else if (allCompleted) label = "All tasks completed ✓";
-  else if (allWaiting) label = "waiting for user to join...";
-  else if (activeTask) label = `${activeTask} triggered`;
-  else if (loading) label = "Loading...";
-
-  return (
-    <div
-      className="status-banner"
-      style={{
-        background:
-          error
-            ? "rgba(180,35,24,0.18)"
-            : allCompleted
-            ? "rgba(26,127,55,0.18)"
-            : activeTask
-            ? "rgba(154,103,0,0.22)"
-            : "rgba(139,117,163,0.35)",
-      }}
-    >
-      <span className="status-dot" />
-      {label}
-    </div>
-  );
-}
-
 export default function Home() {
   const [polling, setPolling] = useState(false);
   const [forceTask, setForceTask] = useState(null);
@@ -50,21 +15,13 @@ export default function Home() {
   // forceTask lets admin preview a task UI regardless of backend state
   const displayTask = forceTask ?? activeTask;
   const allCompleted =
-    !forceTask && flow && TASK_IDS.every((id) => flow[id]?.state === "completed");
+    !forceTask && flow && ["task-1", "task-2", "task-3"].every((id) => flow[id]?.state === "completed");
 
   return (
     <div
       className="page-root"
       style={{ backgroundImage: "url('/background-image.png')" }}
     >
-      {/* Top Status Banner */}
-      <StatusBanner
-        flow={flow}
-        activeTask={activeTask}
-        loading={loading}
-        error={error}
-      />
-
       {/* Main Glass Panel */}
       <div className="glass-panel">
         {!displayTask && !allCompleted && (
@@ -148,7 +105,15 @@ export default function Home() {
                 {polling ? "● Polling every 2s" : "○ Manual"}
               </span>
             </div>
-            <AdminPanel flow={flow} onAction={refresh} forceTask={forceTask} setForceTask={setForceTask} />
+            <AdminPanel
+              flow={flow}
+              onAction={refresh}
+              forceTask={forceTask}
+              setForceTask={setForceTask}
+              activeTask={activeTask}
+              flowLoading={loading}
+              flowError={error}
+            />
           </div>
         </div>
       </aside>

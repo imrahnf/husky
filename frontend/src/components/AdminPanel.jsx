@@ -12,6 +12,38 @@ import {
 
 const TASK_IDS = ["task-1", "task-2", "task-3"];
 
+function LiveFlowStatus({ flow, activeTask, flowLoading, flowError }) {
+  const allCompleted =
+    flow && TASK_IDS.every((id) => flow[id]?.state === "completed");
+  const allWaiting =
+    flow && TASK_IDS.every((id) => flow[id]?.state === "waiting");
+
+  let label = "Fetching state...";
+  if (flowError) label = `Error: ${flowError}`;
+  else if (allCompleted) label = "All tasks completed ✓";
+  else if (allWaiting) label = "waiting for user to join...";
+  else if (activeTask) label = `${activeTask} triggered`;
+  else if (flowLoading) label = "Loading...";
+
+  const bg = flowError
+    ? "rgba(180,35,24,0.22)"
+    : allCompleted
+    ? "rgba(26,127,55,0.22)"
+    : activeTask
+    ? "rgba(154,103,0,0.28)"
+    : "rgba(139,117,163,0.35)";
+
+  return (
+    <div className="admin-section">
+      <div className="admin-section-label">Live status</div>
+      <div className="admin-status-pill" style={{ background: bg }}>
+        <span className="admin-status-dot" />
+        {label}
+      </div>
+    </div>
+  );
+}
+
 function StateTag({ state }) {
   const colors = {
     waiting: "#888",
@@ -26,7 +58,15 @@ function StateTag({ state }) {
   );
 }
 
-export default function AdminPanel({ flow, onAction, forceTask, setForceTask }) {
+export default function AdminPanel({
+  flow,
+  onAction,
+  forceTask,
+  setForceTask,
+  activeTask = null,
+  flowLoading = false,
+  flowError = null,
+}) {
   const [responses, setResponses] = useState({});
   const [errors, setErrors] = useState({});
   const [loading, setLoading] = useState({});
@@ -51,6 +91,13 @@ export default function AdminPanel({ flow, onAction, forceTask, setForceTask }) 
   return (
     <div className="admin-panel">
       <div className="admin-title">Admin Panel</div>
+
+      <LiveFlowStatus
+        flow={flow}
+        activeTask={activeTask}
+        flowLoading={flowLoading}
+        flowError={flowError}
+      />
 
       {/* Flow Status */}
       <div className="admin-section">
