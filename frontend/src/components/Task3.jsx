@@ -6,6 +6,29 @@ const COMPLETE_DELAY_MS = 900;
 const FLAME_COUNT = 5;
 const TORCH_W = 24;
 const TORCH_H = 120;
+const RECAP_TITLE = "Shared Warmth";
+const RECAP_TEXT =
+  "Your light grows when you pass it on. Real warmth is what you create together.";
+const TITLE_CHAR_MS = 40;
+const TITLE_BODY_GAP_MS = 260;
+const BODY_CHAR_MS = 22;
+
+function generateFlames() {
+  const zones = [
+    { xMin: 8, xMax: 24, yMin: 14, yMax: 36 },
+    { xMin: 76, xMax: 92, yMin: 14, yMax: 36 },
+    { xMin: 12, xMax: 28, yMin: 60, yMax: 84 },
+    { xMin: 72, xMax: 88, yMin: 60, yMax: 84 },
+    { xMin: 44, xMax: 56, yMin: 18, yMax: 30 },
+  ];
+  return zones.slice(0, FLAME_COUNT).map((zone, idx) => ({
+    id: `f${idx + 1}`,
+    x: zone.xMin + Math.random() * (zone.xMax - zone.xMin),
+    y: zone.yMin + Math.random() * (zone.yMax - zone.yMin),
+    size: 76 + Math.round(Math.random() * 16),
+    delay: idx * 100,
+  }));
+}
 
 function FlameSvg({ size = 84, delay = 0 }) {
   return (
@@ -49,25 +72,14 @@ export default function Task3({ onComplete }) {
   const torchDragRef = useRef(null);
   const [collected, setCollected] = useState([]);
   const [showTorch, setShowTorch] = useState(false);
+  const [showRecap, setShowRecap] = useState(false);
+  const [typedTitle, setTypedTitle] = useState("");
+  const [typedBody, setTypedBody] = useState("");
+  const [recapTypingDone, setRecapTypingDone] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [torchPos, setTorchPos] = useState({ x: 48, y: 72 });
-  const flames = useMemo(() => {
-    const zones = [
-      { xMin: 8, xMax: 24, yMin: 14, yMax: 36 },
-      { xMin: 76, xMax: 92, yMin: 14, yMax: 36 },
-      { xMin: 12, xMax: 28, yMin: 60, yMax: 84 },
-      { xMin: 72, xMax: 88, yMin: 60, yMax: 84 },
-      { xMin: 44, xMax: 56, yMin: 18, yMax: 30 },
-    ];
-    return zones.slice(0, FLAME_COUNT).map((zone, idx) => ({
-      id: `f${idx + 1}`,
-      x: zone.xMin + Math.random() * (zone.xMax - zone.xMin),
-      y: zone.yMin + Math.random() * (zone.yMax - zone.yMin),
-      size: 76 + Math.round(Math.random() * 16),
-      delay: idx * 100,
-    }));
-  }, []);
+  const [flames, setFlames] = useState([]);
 
   const isMobile = useMemo(() => {
     if (typeof window === "undefined") return false;
@@ -78,6 +90,10 @@ export default function Task3({ onComplete }) {
     if (isMobile) return undefined;
     return undefined;
   }, [isMobile]);
+
+  useEffect(() => {
+    setFlames(generateFlames());
+  }, []);
 
   useEffect(() => {
     const recomputeFlameCenters = () => {
@@ -145,7 +161,7 @@ export default function Task3({ onComplete }) {
       setError(null);
       try {
         await completeTask3();
-        window.setTimeout(() => onComplete?.(), COMPLETE_DELAY_MS);
+        setShowRecap(true);
       } catch (e) {
         setError(e.message || String(e));
         completedRef.current = false;
@@ -157,19 +173,57 @@ export default function Task3({ onComplete }) {
     return undefined;
   }, [showTorch, onComplete]);
 
+  useEffect(() => {
+    if (!showRecap) return undefined;
+    const timeouts = [];
+    let cancelled = false;
+
+    const wait = (ms) =>
+      new Promise((resolve) => {
+        const id = window.setTimeout(resolve, ms);
+        timeouts.push(id);
+      });
+
+    const run = async () => {
+      setTypedTitle("");
+      setTypedBody("");
+      setRecapTypingDone(false);
+      for (let i = 1; i <= RECAP_TITLE.length; i++) {
+        if (cancelled) return;
+        await wait(TITLE_CHAR_MS);
+        setTypedTitle(RECAP_TITLE.slice(0, i));
+      }
+      await wait(TITLE_BODY_GAP_MS);
+      for (let i = 1; i <= RECAP_TEXT.length; i++) {
+        if (cancelled) return;
+        await wait(BODY_CHAR_MS);
+        setTypedBody(RECAP_TEXT.slice(0, i));
+      }
+      if (!cancelled) setRecapTypingDone(true);
+    };
+
+    run();
+
+    return () => {
+      cancelled = true;
+      timeouts.forEach((id) => window.clearTimeout(id));
+    };
+  }, [showRecap]);
+
+  useEffect(() => {
+    if (!recapTypingDone) return undefined;
+    const id = window.setTimeout(() => onComplete?.(), COMPLETE_DELAY_MS);
+    return () => window.clearTimeout(id);
+  }, [recapTypingDone, onComplete]);
+
   const updateTorchFromPointer = (clientX, clientY) => {
     const rect = playfieldRef.current?.getBoundingClientRect();
     if (!rect) return;
 
-    const minX = (TORCH_W / 2 / rect.width) * 100;
-    const maxX = 100 - minX;
-    const minY = ((TORCH_H * 0.2) / rect.height) * 100;
-    const maxY = 100 - (TORCH_H / rect.height) * 100;
-
     const nextX = ((clientX - rect.left) / rect.width) * 100;
     const nextY = ((clientY - rect.top) / rect.height) * 100;
-    const clampedX = Math.max(minX, Math.min(maxX, nextX));
-    const clampedY = Math.max(minY, Math.min(maxY, nextY));
+    const clampedX = Math.max(0, Math.min(100, nextX));
+    const clampedY = Math.max(0, Math.min(100, nextY));
 
     setTorchPos({ x: clampedX, y: clampedY });
     detectFlameHit(clampedX, clampedY);
@@ -270,6 +324,22 @@ export default function Task3({ onComplete }) {
 
       {error && <p className="error-msg">{error}</p>}
       {!showTorch && <p className="task3-counter">{collected.length}/{flames.length} flames collected</p>}
+      {showRecap && (
+        <div className="task2-story task3-recap">
+          <h3>
+            {typedTitle}
+            {!recapTypingDone && typedTitle.length < RECAP_TITLE.length && (
+              <span className="task1-story-cursor" aria-hidden="true" />
+            )}
+          </h3>
+          <p>
+            {typedBody}
+            {recapTypingDone ? null : typedTitle.length === RECAP_TITLE.length ? (
+              <span className="task1-story-cursor" aria-hidden="true" />
+            ) : null}
+          </p>
+        </div>
+      )}
     </div>
   );
 }

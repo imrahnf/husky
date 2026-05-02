@@ -94,7 +94,7 @@ function genPositions(w, h) {
 
 const STORY_TITLE = "Self-Acceptance";
 const STORY_BODY =
-  "The stone you chose was not ruined—it was honest. For a long time, fitting in felt like the only way to matter. But worth is not a costume you borrow. Self-acceptance is realizing you don't have to be \"normal\" to be valuable; it is choosing to stand beside yourself, cracks and all, and still call that enough.";
+  "The imperfect stone was never less worthy—it was simply real. Self-acceptance means you do not have to be \"normal\" to be valuable.";
 const TITLE_CHAR_MS = 42;
 const TITLE_BODY_GAP_MS = 320;
 const BODY_CHAR_MS = 24;
